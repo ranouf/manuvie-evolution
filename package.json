@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "jest --coverage",
     "test:visual": "playwright test",
+    "coverage:summary": "node scripts/write-coverage-summary.mjs",
     "build": "node scripts/build-extension.mjs",
     "release-note:check": "node scripts/check-release-note.mjs",
     "chrome-store:dry-run": "node scripts/check-chrome-store-credentials.mjs --env-file=.codex/secretkeys.txt",

@@ -1,7 +1,7 @@
 module.exports = {
   collectCoverageFrom: ["src/analytics.js"],
   coverageDirectory: "coverage/jest",
-  coverageReporters: ["text", "lcov", "cobertura"],
+  coverageReporters: ["text", "lcov", "cobertura", "json-summary"],
   coverageThreshold: {
     global: { branches: 90, functions: 90, lines: 90, statements: 90 },
   },
