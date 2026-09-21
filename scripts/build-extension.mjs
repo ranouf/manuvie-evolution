@@ -12,6 +12,10 @@ const chromeStorePath = path.join(
 const files = [
   "manifest.json",
   "PRIVACY.md",
+  "icons/icon-16.png",
+  "icons/icon-32.png",
+  "icons/icon-48.png",
+  "icons/icon-128.png",
   "src/analytics.js",
   "src/content.js",
   "src/network-bridge.js",

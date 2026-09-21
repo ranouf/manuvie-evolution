@@ -1,11 +1,11 @@
 {
   "name": "manuvie-evolution",
-  "version": "0.2.20",
+  "version": "0.2.21",
   "private": true,
   "description": "Extension Chrome qui affiche les gains et les frais du portail Gestion de patrimoine Manuvie.",
   "scripts": {
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format": "prettier --write \"*.{js,json,md}\" \".github/workflows/*.{yml,yaml}\" \"scripts/**/*.{js,mjs,cjs}\" \"src/**/*.{js,css}\" \"tests/**/*.{js,json}\" \"release-notes/**/*.md\"",
+    "format:check": "prettier --check \"*.{js,json,md}\" \".github/workflows/*.{yml,yaml}\" \"scripts/**/*.{js,mjs,cjs}\" \"src/**/*.{js,css}\" \"tests/**/*.{js,json}\" \"release-notes/**/*.md\"",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "jest --coverage",

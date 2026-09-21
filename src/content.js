@@ -5,7 +5,7 @@
   const PAGE_SOURCE = "manuvie-evolution-page";
   const CONTENT_SOURCE = "manuvie-evolution-content";
   const API_ORIGIN = "https://api.myinvestorportal.ca";
-  const extensionVersion = globalThis.chrome?.runtime?.getManifest?.().version ?? "0.2.20";
+  const extensionVersion = globalThis.chrome?.runtime?.getManifest?.().version ?? "0.2.21";
   const money = new Intl.NumberFormat("fr-CA", {
     style: "currency",
     currency: "CAD",
