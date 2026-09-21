@@ -1,6 +1,6 @@
 {
   "name": "manuvie-evolution",
-  "version": "0.2.22",
+  "version": "0.2.21",
   "private": true,
   "description": "Extension Chrome qui affiche les gains et les frais du portail Gestion de patrimoine Manuvie.",
   "scripts": {
