@@ -216,7 +216,7 @@ test("shows detailed loading progress", async ({ page }) => {
 
 test("renders the Manuvie Evolution dashboard", async ({ page }) => {
   await page.setContent(
-    `<!doctype html><html lang="fr"><body style="margin:0;background:#eef3f5;font-family:Arial"><header style="height:110px;background:#fff;padding:30px 50px;font-size:34px">Gestion de patrimoine <b>Manuvie</b></header><main style="padding:50px"><h1>Bonjour!</h1><div style="display:flex;gap:24px"><div style="background:#00a758;color:#fff;padding:34px;width:260px"><b>Valeur marchande</b><h2>241 294,51 $</h2></div><div style="background:#003f5c;color:#fff;padding:34px;width:260px"><b>Solde de trésorerie</b><h2>-6,64 $</h2></div></div></main></body></html>`,
+    `<!doctype html><html lang="fr"><body style="margin:0;background:#eef3f5;font-family:Arial"><header style="height:110px;background:#fff;padding:30px 50px;font-size:34px">Gestion de patrimoine <b>Manuvie</b></header><main style="padding:50px"><h1>Bonjour!</h1><div style="display:flex;gap:24px"><div style="background:#00a758;color:#fff;padding:34px;width:260px"><b>Valeur marchande</b><h2>12 345,67 $</h2></div><div style="background:#003f5c;color:#fff;padding:34px;width:260px"><b>Solde de trésorerie</b><h2>0,12 $</h2></div></div></main></body></html>`,
   );
   await page.addStyleTag({ path: path.resolve("src/styles.css") });
   await page.addScriptTag({ path: path.resolve("src/analytics.js") });
@@ -225,8 +225,8 @@ test("renders the Manuvie Evolution dashboard", async ({ page }) => {
   const months = Array.from({ length: 33 }, (_, index) =>
     Date.UTC(2024 + Math.floor(index / 12), index % 12, 28),
   );
-  const market = months.map((date, index) => [date, 135000 + index * 3200]);
-  const capital = months.map((date, index) => [date, 130000 + index * 1200]);
+  const market = months.map((date, index) => [date, 24680 + index * 375]);
+  const capital = months.map((date, index) => [date, 21000 + index * 190]);
   await page.evaluate(
     ({ market, capital }) => {
       window.postMessage({ source: "manuvie-evolution-page", type: "bridge-ready" }, "*");
@@ -272,21 +272,21 @@ test("renders the Manuvie Evolution dashboard", async ({ page }) => {
                 transactionType: "Frais De Programme À Honoraires",
                 securityDescription: "PREMIER FEE",
                 tradeDate: `15/06/${year}`,
-                totalValue: -700,
+                totalValue: -17,
               },
               {
                 accountNumber,
                 transactionType: "Tps",
                 securityDescription: "GST",
                 tradeDate: `15/06/${year}`,
-                totalValue: -35,
+                totalValue: -1.11,
               },
               {
                 accountNumber,
                 transactionType: "Taxe de vente du Québec",
                 securityDescription: "QST",
                 tradeDate: `15/06/${year}`,
-                totalValue: -70,
+                totalValue: -2.22,
               },
               {
                 accountNumber,
@@ -295,17 +295,17 @@ test("renders the Manuvie Evolution dashboard", async ({ page }) => {
                   accountNumber === "DEMOREER"
                     ? "YN5-6MAY-T BIWEEKLY PAC"
                     : accountNumber === "DEMOCELI"
-                      ? "RBC BILL PAYMENT"
+                      ? "BNC BILL PAYMENT"
                       : "Dépôt annuel",
                 tradeDate: `15/03/${year}`,
-                totalValue: 1200,
+                totalValue: 123,
               },
               {
                 accountNumber,
                 transactionType: "Cotisation",
                 securityDescription: "Dépôt ponctuel",
                 tradeDate: `20/07/${year}`,
-                totalValue: 800,
+                totalValue: 45,
               },
             ]),
           },
@@ -361,15 +361,15 @@ test("renders the Manuvie Evolution dashboard", async ({ page }) => {
   await expect(page.getByRole("columnheader", { name: "Cumul" })).toBeVisible();
   await expect(page.getByRole("cell", { name: /CELI/ }).first()).toBeVisible();
   await expect(
-    page.getByRole("cell", { name: "Cotisation · RBC BILL PAYMENT" }).first(),
+    page.getByRole("cell", { name: "Cotisation · BNC BILL PAYMENT" }).first(),
   ).toBeVisible();
-  await expect(page.getByRole("cell", { name: "1 200 $" }).first()).toBeVisible();
-  await expect(page.getByRole("cell", { name: "6 000 $" })).toBeVisible();
+  await expect(page.getByRole("cell", { name: "123 $" }).first()).toBeVisible();
+  await expect(page.getByRole("cell", { name: "504 $" })).toBeVisible();
   await page.getByRole("button", { name: "Filtrer Compte" }).click();
   await expect(page.getByRole("menu")).toBeVisible();
   await page.getByLabel("CELI").check();
   await expect(page.getByRole("button", { name: "Filtrer Compte" }).locator("b")).toHaveText("1");
-  await expect(page.getByRole("cell", { name: "2 000 $" })).toBeVisible();
+  await expect(page.getByRole("cell", { name: "168 $" })).toBeVisible();
   await page.screenshot({ path: "test-results/manuvie-evolution-contribution-filter.png" });
   await page.getByRole("button", { name: "Filtrer Compte" }).click();
   await expect(page.getByRole("menu")).toHaveCount(0);
