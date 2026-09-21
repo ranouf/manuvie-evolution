@@ -119,6 +119,14 @@ jobs:
           if [ "$upload_status" -lt 200 ] || [ "$upload_status" -ge 300 ]; then
             if grep -q "You may not edit or publish an item that is in review" "$upload_response"; then
               echo "::notice::Chrome Web Store item is already in review; upload and publish are skipped."
+              {
+                echo "## ⚠️ Chrome Web Store publication skipped"
+                echo ""
+                echo "The extension is already submitted for Chrome Web Store review."
+                echo "Google does not allow uploading or publishing a new package while an item is in review."
+                echo ""
+                echo "The package was built successfully, but the Chrome Web Store upload and publish steps were skipped."
+              } >> "$GITHUB_STEP_SUMMARY"
               cat "$upload_response"
               exit 0
             fi
@@ -136,6 +144,14 @@ jobs:
           if [ "$publish_status" -lt 200 ] || [ "$publish_status" -ge 300 ]; then
             if grep -q "You may not edit or publish an item that is in review" "$publish_response"; then
               echo "::notice::Chrome Web Store item is already in review; publish is skipped."
+              {
+                echo "## ⚠️ Chrome Web Store publication skipped"
+                echo ""
+                echo "The extension is already submitted for Chrome Web Store review."
+                echo "Google does not allow publishing a new package while an item is in review."
+                echo ""
+                echo "The package was uploaded successfully, but the Chrome Web Store publish step was skipped."
+              } >> "$GITHUB_STEP_SUMMARY"
               cat "$publish_response"
               exit 0
             fi
