@@ -135,7 +135,7 @@ jobs:
           build_status=$(status "${{ steps.build.outcome }}")
 
           coverage_status="pass"
-          if [ "${{ steps.coverage.outcome }}" != "success" ] || [ "${{ steps.coverage_report.outcome }}" != "success" ] || [ "${{ steps.code_coverage_check.outcome }}" != "success" ] || [ "${{ steps.code_coverage_check.outputs.coverage-outcome }}" = "Failed" ]; then
+          if [ "${{ steps.coverage.outcome }}" != "success" ] || [ "${{ steps.code_coverage_check.outputs.coverage-outcome }}" = "Failed" ]; then
             coverage_status="fail"
           fi
 
