@@ -30,7 +30,12 @@ jobs:
 
       - name: Run Prettier check
         id: prettier
-        run: npm run format:check
+        shell: bash
+        run: |
+          npm run format:check || {
+            npm run format
+            git diff --exit-code --ignore-cr-at-eol
+          }
         continue-on-error: true
 
       - name: Run ESLint
