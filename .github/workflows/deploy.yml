@@ -109,16 +109,56 @@ jobs:
 
           access_token=$(node -e "const data = JSON.parse(process.argv[1]); if (!data.access_token) { console.error(JSON.stringify(data)); process.exit(1); } console.log(data.access_token);" "$token_response")
 
-          curl --fail-with-body -sS -X POST \
+          upload_response=$(mktemp)
+          upload_status=$(curl -sS -o "$upload_response" -w "%{http_code}" -X POST \
             -H "Authorization: Bearer $access_token" \
             -H "x-goog-api-version: 2" \
             -T "dist/manuvie-evolution-${{ needs.build.outputs.version }}-chrome-store.zip" \
-            "https://chromewebstore.googleapis.com/upload/v2/publishers/${{ secrets.CHROME_PUBLISHER_ID }}/items/${{ secrets.CHROME_EXTENSION_ID }}:upload"
+            "https://chromewebstore.googleapis.com/upload/v2/publishers/${{ secrets.CHROME_PUBLISHER_ID }}/items/${{ secrets.CHROME_EXTENSION_ID }}:upload")
 
-          curl --fail-with-body -sS -X POST \
+          if [ "$upload_status" -lt 200 ] || [ "$upload_status" -ge 300 ]; then
+            if grep -q "You may not edit or publish an item that is in review" "$upload_response"; then
+              echo "::notice::Chrome Web Store item is already in review; upload and publish are skipped."
+              {
+                echo "## ⚠️ Chrome Web Store publication skipped"
+                echo ""
+                echo "The extension is already submitted for Chrome Web Store review."
+                echo "Google does not allow uploading or publishing a new package while an item is in review."
+                echo ""
+                echo "The package was built successfully, but the Chrome Web Store upload and publish steps were skipped."
+              } >> "$GITHUB_STEP_SUMMARY"
+              cat "$upload_response"
+              exit 0
+            fi
+
+            cat "$upload_response"
+            exit 1
+          fi
+
+          publish_response=$(mktemp)
+          publish_status=$(curl -sS -o "$publish_response" -w "%{http_code}" -X POST \
             -H "Authorization: Bearer $access_token" \
             -H "x-goog-api-version: 2" \
-            "https://chromewebstore.googleapis.com/v2/publishers/${{ secrets.CHROME_PUBLISHER_ID }}/items/${{ secrets.CHROME_EXTENSION_ID }}:publish"
+            "https://chromewebstore.googleapis.com/v2/publishers/${{ secrets.CHROME_PUBLISHER_ID }}/items/${{ secrets.CHROME_EXTENSION_ID }}:publish")
+
+          if [ "$publish_status" -lt 200 ] || [ "$publish_status" -ge 300 ]; then
+            if grep -q "You may not edit or publish an item that is in review" "$publish_response"; then
+              echo "::notice::Chrome Web Store item is already in review; publish is skipped."
+              {
+                echo "## ⚠️ Chrome Web Store publication skipped"
+                echo ""
+                echo "The extension is already submitted for Chrome Web Store review."
+                echo "Google does not allow publishing a new package while an item is in review."
+                echo ""
+                echo "The package was uploaded successfully, but the Chrome Web Store publish step was skipped."
+              } >> "$GITHUB_STEP_SUMMARY"
+              cat "$publish_response"
+              exit 0
+            fi
+
+            cat "$publish_response"
+            exit 1
+          fi
 
   github-release:
     name: Create GitHub Release
