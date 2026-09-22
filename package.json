@@ -1,0 +1,31 @@
+{
+  "name": "manuvie-evolution",
+  "version": "0.2.21",
+  "private": true,
+  "description": "Extension Chrome qui affiche les gains et les frais du portail Gestion de patrimoine Manuvie.",
+  "scripts": {
+    "format": "prettier --write \"*.{js,json,md}\" \".github/workflows/*.{yml,yaml}\" \"scripts/**/*.{js,mjs,cjs}\" \"src/**/*.{js,css}\" \"tests/**/*.{js,json}\" \"release-notes/**/*.md\"",
+    "format:check": "prettier --check \"*.{js,json,md}\" \".github/workflows/*.{yml,yaml}\" \"scripts/**/*.{js,mjs,cjs}\" \"src/**/*.{js,css}\" \"tests/**/*.{js,json}\" \"release-notes/**/*.md\"",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "jest --coverage",
+    "test:visual": "playwright test",
+    "coverage:summary": "node scripts/write-coverage-summary.mjs",
+    "build": "node scripts/build-extension.mjs",
+    "release-note:check": "node scripts/check-release-note.mjs",
+    "chrome-store:dry-run": "node scripts/check-chrome-store-credentials.mjs --env-file=.codex/secretkeys.txt",
+    "ci": "npm run format:check && npm run lint && npm run typecheck && npm run release-note:check && npm test && npm run test:visual && npm run build"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.57.0",
+    "@types/chrome": "^0.2.8",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^20.12.7",
+    "eslint": "^9.39.1",
+    "globals": "^17.12.0",
+    "jest": "^30.5.1",
+    "prettier": "^3.7.4",
+    "typescript": "~5.9.2",
+    "yazl": "^3.3.1"
+  }
+}
