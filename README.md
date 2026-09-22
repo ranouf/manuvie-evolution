@@ -1,18 +1,18 @@
-# Manuvie Évolution
+# Manuvie Evolution
 
-Extension Chrome locale qui ajoute un bouton **Évolution** au portail Gestion de patrimoine Manuvie. Le panneau affiche les gains cumulés, les rendements par année et les frais directement débités.
+Local Chrome extension that adds an **Evolution** button to the Manulife Wealth portal. The panel displays cumulative gains, yearly returns, and directly charged fees.
 
-## Installation locale
+## Local installation
 
-1. Ouvrir `chrome://extensions/` dans Chrome.
-2. Activer **Mode développeur**.
-3. Cliquer **Charger l’extension non empaquetée**.
-4. Sélectionner le dossier de ce projet.
-5. Recharger `https://manulifewealth.myinvestorportal.ca/overview`.
+1. Open `chrome://extensions/` in Chrome.
+2. Enable **Developer mode**.
+3. Click **Load unpacked**.
+4. Select this project folder.
+5. Reload `https://manulifewealth.myinvestorportal.ca/overview`.
 
-Lien à charger dans Chrome : `C:\Users\cedric\Documents\Sources\Manuvie`
+Folder to load in Chrome: `C:\Users\cedric\Documents\Sources\Manuvie`
 
-## Commandes
+## Commands
 
 ```text
 npm run format:check
@@ -23,16 +23,16 @@ npm run test:visual
 npm run build
 ```
 
-Le build produit deux archives :
+The build creates two archives:
 
-- `dist/manuvie-evolution-{version}.zip` pour les tests et les releases locales ;
-- `dist/manuvie-evolution-{version}-chrome-store.zip` pour le Chrome Web Store.
+- `dist/manuvie-evolution-{version}.zip` for local testing and local releases;
+- `dist/manuvie-evolution-{version}-chrome-store.zip` for the Chrome Web Store.
 
-## Publication Chrome Web Store
+## Chrome Web Store publication
 
-La publication reprend la même procédure que l’extension UglyPadlet via le workflow GitHub Actions **Deploy Chrome Extension**.
+Publication follows the same process as the UglyPadlet extension through the **Deploy Chrome Extension** GitHub Actions workflow.
 
-Secrets GitHub requis :
+Required GitHub secrets:
 
 - `CHROME_EXTENSION_ID`
 - `CHROME_PUBLISHER_ID`
@@ -40,28 +40,28 @@ Secrets GitHub requis :
 - `CHROME_CLIENT_SECRET`
 - `CHROME_REFRESH_TOKEN`
 
-Validation locale des credentials, si `.codex/secretkeys.txt` contient ces valeurs :
+Local credential validation, if `.codex/secretkeys.txt` contains these values:
 
 ```text
 npm run chrome-store:dry-run
 ```
 
-Publication depuis GitHub :
+Publication from GitHub:
 
-1. Ouvrir **Actions**.
-2. Lancer **Deploy Chrome Extension** avec **Run workflow**.
-3. Garder `dry_run=true` pour valider les secrets sans publier.
-4. Mettre `dry_run=false` et `publish_to_chrome_store=true` pour envoyer et publier sur le Chrome Web Store.
-5. Optionnellement mettre `create_github_release=true` pour créer la release GitHub avec le zip Chrome Store.
+1. Open **Actions**.
+2. Run **Deploy Chrome Extension** with **Run workflow**.
+3. Keep `dry_run=true` to validate secrets without publishing.
+4. Set `dry_run=false` and `publish_to_chrome_store=true` to upload and publish to the Chrome Web Store.
+5. Optionally set `create_github_release=true` to create the GitHub release with the Chrome Store zip.
 
-## Sources de données du portail
+## Portal data sources
 
-- `/portfoliosummary/performance/v3/fr?rangeType=sinceInception` : historique global.
-- `/account/chart/account/{compte}/language/fr?rangeType=sinceInception` : historique d’un compte.
-- `/transactions/investorId/{investisseur}/language/fr` : frais Manuvie, TPS et TVQ.
+- `/portfoliosummary/performance/v3/fr?rangeType=sinceInception`: global history.
+- `/account/chart/account/{account}/language/fr?rangeType=sinceInception`: account history.
+- `/transactions/investorId/{investor}/language/fr`: Manulife fees, GST, and QST.
 
-Le gain affiché correspond à `valeur marchande - capital net investi`. Les dépôts et retraits ne sont donc pas comptés comme un gain ou une perte.
+The displayed gain is calculated as `market value - net invested capital`. Deposits and withdrawals are therefore not counted as gains or losses.
 
-## Cache local
+## Local cache
 
-L’extension conserve les données déjà chargées dans le stockage local Chrome, par investisseur. Les années fermées sont réutilisées au prochain chargement et l’extension redemande seulement l’année courante pour actualiser les graphiques et les frais.
+The extension keeps already loaded data in Chrome local storage, per investor. Closed years are reused on the next load, and the extension requests only the current year again to refresh charts and fees.
