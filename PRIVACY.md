@@ -1,39 +1,39 @@
-# Politique de confidentialité
+# Privacy Policy
 
-Dernière mise à jour : 21 septembre 2026
+Last updated: September 21, 2026
 
-Manuvie Évolution est une extension Chrome qui ajoute un panneau d’analyse directement dans le portail Gestion de patrimoine Manuvie.
+Manuvie Evolution is a Chrome extension that adds an analytics panel directly inside the Manulife Wealth portal.
 
-## Données traitées
+## Data processed
 
-L’extension lit uniquement les données déjà accessibles à l’utilisateur connecté dans le portail Manuvie, par exemple les comptes, valeurs marchandes, transactions, cotisations, frais et historiques de performance nécessaires aux calculs affichés.
+The extension only reads data that is already available to the signed-in user in the Manulife portal, such as accounts, market values, transactions, contributions, fees, and performance history required for the displayed calculations.
 
-Ces données servent seulement à afficher localement les gains, rendements, frais, cotisations et graphiques dans le navigateur.
+This data is used only to locally display gains, returns, fees, contributions, and charts in the browser.
 
-## Collecte et transmission
+## Collection and transmission
 
-Manuvie Évolution ne collecte aucune donnée sur un serveur, ne crée aucun compte utilisateur, ne vend aucune donnée et ne transmet aucune donnée financière à l’éditeur de l’extension ou à des tiers.
+Manuvie Evolution does not collect any data on a server, does not create user accounts, does not sell any data, and does not transmit financial data to the extension publisher or to third parties.
 
-Les identifiants, mots de passe et codes d’authentification Manuvie ne sont jamais lus, stockés ou transmis par l’extension.
+Manulife usernames, passwords, and authentication codes are never read, stored, or transmitted by the extension.
 
-## Stockage local
+## Local storage
 
-L’extension peut conserver localement, dans le stockage Chrome du profil courant, certaines données déjà chargées depuis le portail afin d’éviter de recharger les années passées et d’accélérer l’affichage.
+The extension may locally store, in the current Chrome profile storage, some data already loaded from the portal in order to avoid reloading past years and to speed up display.
 
-Ce cache reste sur l’appareil de l’utilisateur. Il est utilisé uniquement par l’extension dans le portail Manuvie.
+This cache remains on the user’s device. It is used only by the extension inside the Manulife portal.
 
 ## Permissions
 
-L’autorisation `storage` permet de conserver ce cache local et les préférences nécessaires au fonctionnement de l’extension.
+The `storage` permission is used to keep this local cache and the preferences required for the extension to work.
 
-Les autorisations d’hôte sont limitées au portail Manuvie et à son API associée. Elles sont nécessaires pour exécuter l’extension dans le portail et lire les réponses autorisées par la session Manuvie de l’utilisateur connecté.
+Host permissions are limited to the Manulife portal and its associated API. They are required to run the extension inside the portal and to read responses authorized by the signed-in user’s Manulife session.
 
-## Code distant
+## Remote code
 
-Toute la logique JavaScript de l’extension est incluse dans le package publié. L’extension ne charge pas de script distant et n’utilise pas de code JavaScript ou WebAssembly externe pour son fonctionnement.
+All JavaScript logic for the extension is included in the published package. The extension does not load remote scripts and does not use external JavaScript or WebAssembly code for its operation.
 
-L’extension interagit avec le portail Manuvie et son API afin de lire les données de l’utilisateur connecté, mais elle n’exécute pas de code provenant de ces réponses.
+The extension interacts with the Manulife portal and its API to read the signed-in user’s data, but it does not execute code from those responses.
 
 ## Contact
 
-Pour signaler un bug ou envoyer une suggestion, utilisez la page d’assistance du projet : <https://github.com/ranouf/manuvie-evolution/issues>.
+To report a bug or send a suggestion, use the project support page: <https://github.com/ranouf/manuvie-evolution/issues>.
