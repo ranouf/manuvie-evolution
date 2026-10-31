@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Manuvie Évolution",
-  "version": "0.2.21",
+  "version": "0.2.22",
   "description": "Affiche les gains, rendements et frais directement dans le portail Gestion de patrimoine Manuvie.",
   "icons": {
     "16": "icons/icon-16.png",
