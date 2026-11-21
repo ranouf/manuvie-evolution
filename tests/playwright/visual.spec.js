@@ -56,7 +56,7 @@ test("loads the unpacked extension in Chromium and crosses isolated worlds", asy
       () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
     );
   await expect(page.getByRole("button", { name: "Ouvrir Manuvie Évolution" })).toContainText(
-    "v0.2.21",
+    "v0.2.22",
   );
   await expect(hasPageHorizontalOverflow()).resolves.toBe(false);
   await page.getByRole("button", { name: "Ouvrir Manuvie Évolution" }).click();
@@ -163,7 +163,7 @@ test("hydrates cached history and requests only fresh years", async ({ page }) =
     ),
   ).resolves.toBe(false);
   await expect(page.getByRole("button", { name: "Ouvrir Manuvie Évolution" })).toContainText(
-    "v0.2.21",
+    "v0.2.22",
   );
   await page.getByRole("button", { name: "Ouvrir Manuvie Évolution" }).click();
   await expect(page.getByRole("heading", { name: "Gains de vos placements" })).toBeVisible();
@@ -311,17 +311,6 @@ test("renders the Manuvie Evolution dashboard", async ({ page }) => {
           },
           `transactions:${year}`,
         );
-        dispatch(
-          "return",
-          { performance: year === 2024 ? {} : { returnOnInvestment: 10 + year - 2024 } },
-          `total:return:${year}`,
-        );
-        for (const account of ["DEMOREER", "DEMOCELI", "DEMOREEE"])
-          dispatch(
-            "return",
-            { returnOnInvestment: 8 + year - 2024 },
-            `account:${account}:return:${year}`,
-          );
       }
     },
     { market, capital },
@@ -457,6 +446,11 @@ test("renders the Manuvie Evolution dashboard", async ({ page }) => {
     }, edgeHoverPoint.clientX);
     expect(pointOffset).toBeLessThan(1);
   }
+  const displayedRate = await page.locator(".me-kpi-summary b").textContent();
+  await expect(page.locator(".me-year").last().locator("small").first()).toContainText(
+    displayedRate,
+  );
+  await expect(firstChart.locator(".me-tooltip-year-rate")).toContainText(displayedRate);
   const rightHoverPoint = await hoverTarget("right");
   await page.mouse.move(rightHoverPoint.clientX, rightHoverPoint.clientY);
   await expect(

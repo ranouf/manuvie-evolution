@@ -82,11 +82,28 @@ describe("analytics", () => {
     });
   });
 
-  test("computes estimated annual return rates", () => {
-    expect(
-      analytics.yearlyReturnRates({ 2024: 900 }, { 2024: { average: 10000, months: 6 } }),
-    ).toEqual({ 2024: 18 });
-    expect(analytics.yearlyReturnRates({ 2025: 100 }, {})).toEqual({ 2025: 0 });
+  test("computes cash-flow-adjusted return rates", () => {
+    const market = [
+      [jan2024, 100],
+      [dec2024, 160],
+      [jan2025, 190],
+    ];
+    const capital = [
+      [jan2024, 80],
+      [dec2024, 100],
+      [jan2025, 110],
+    ];
+
+    const metrics = analytics.returnMetricsSeries(market, capital);
+    expect(metrics[0]).toEqual([jan2024, { total: 0, year: 0 }]);
+    expect(metrics[1][1].total).toBeCloseTo(40);
+    expect(metrics[1][1].year).toBeCloseTo(40);
+    expect(metrics[2][1].total).toBeCloseTo(57.5);
+    expect(metrics[2][1].year).toBeCloseTo(12.5);
+
+    const yearly = analytics.yearlyReturnRates(market, capital);
+    expect(yearly[2024]).toBeCloseTo(40);
+    expect(yearly[2025]).toBeCloseTo(12.5);
   });
 
   test("classifies and aggregates Manuvie, GST and QST fees", () => {

@@ -64,13 +64,45 @@
     );
   };
 
-  const yearlyReturnRates = (gainsByYear, marketValuesByYear) =>
-    Object.fromEntries(
-      Object.entries(gainsByYear).map(([year, gain]) => {
-        const market = marketValuesByYear[year] ?? { average: 0, months: 0 };
-        return [year, market.average ? (gain / market.average) * (12 / market.months) * 100 : 0];
-      }),
-    );
+  const returnMetricsSeries = (marketValue, netInvestedCapital) => {
+    const capital = new Map(normalizeSeries(netInvestedCapital));
+    const points = normalizeSeries(marketValue).filter(([date]) => capital.has(date));
+    let totalFactor = 1;
+    let yearFactor = 1;
+    let activeYear;
+
+    return points.map(([date, market], index) => {
+      const year = yearOf(date);
+      if (year !== activeYear) {
+        activeYear = year;
+        yearFactor = 1;
+      }
+
+      const previous = points[index - 1];
+      if (previous?.[1]) {
+        const netFlow = capital.get(date) - capital.get(previous[0]);
+        const periodFactor = (market - netFlow) / previous[1];
+        totalFactor *= periodFactor;
+        yearFactor *= periodFactor;
+      }
+
+      return [
+        date,
+        {
+          total: (totalFactor - 1) * 100,
+          year: (yearFactor - 1) * 100,
+        },
+      ];
+    });
+  };
+
+  const yearlyReturnRates = (marketValue, netInvestedCapital) => {
+    const result = {};
+    for (const [date, metrics] of returnMetricsSeries(marketValue, netInvestedCapital)) {
+      result[yearOf(date)] = metrics.year;
+    }
+    return result;
+  };
 
   const parseFrenchDate = (value) => {
     const [day, month, year] = String(value).split("/").map(Number);
@@ -179,6 +211,7 @@
     mergeSeries,
     normalizeSeries,
     parseFrenchDate,
+    returnMetricsSeries,
     transactionsForAccount,
     yearlyGains,
     yearlyReturnRates,
