@@ -1,5 +1,9 @@
-import { test, expect, chromium } from "@playwright/test";
+import { readFileSync } from "node:fs";
 import path from "node:path";
+
+import { chromium, expect, test } from "@playwright/test";
+
+const extensionVersion = JSON.parse(readFileSync("manifest.json", "utf8")).version;
 
 test("loads the unpacked extension in Chromium and crosses isolated worlds", async () => {
   const extensionPath = path.resolve(".");
@@ -56,12 +60,13 @@ test("loads the unpacked extension in Chromium and crosses isolated worlds", asy
       () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
     );
   await expect(page.getByRole("button", { name: "Ouvrir Manuvie Évolution" })).toContainText(
-    "v0.2.21",
+    `v${extensionVersion}`,
   );
   await expect(hasPageHorizontalOverflow()).resolves.toBe(false);
   await page.getByRole("button", { name: "Ouvrir Manuvie Évolution" }).click();
   await expect(page.getByRole("heading", { name: "Gains de vos placements" })).toBeVisible();
   await expect(hasPageHorizontalOverflow()).resolves.toBe(false);
+  await page.screenshot({ path: "test-results/manuvie-evolution-version.png" });
   await context.close();
 });
 
