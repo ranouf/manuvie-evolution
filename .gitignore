@@ -1,4 +1,5 @@
 .codex/
+.vs/
 node_modules/
 coverage/
 dist/

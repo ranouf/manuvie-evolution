@@ -5,7 +5,7 @@
   const PAGE_SOURCE = "manuvie-evolution-page";
   const CONTENT_SOURCE = "manuvie-evolution-content";
   const API_ORIGIN = "https://api.myinvestorportal.ca";
-  const extensionVersion = globalThis.chrome?.runtime?.getManifest?.().version ?? "0.2.21";
+  const extensionVersion = globalThis.chrome?.runtime?.getManifest?.().version ?? "0.2.22";
   const money = new Intl.NumberFormat("fr-CA", {
     style: "currency",
     currency: "CAD",
@@ -42,7 +42,6 @@
     accounts: null,
     total: null,
     accountCharts: new Map(),
-    returns: new Map(),
     transactions: new Map(),
     requested: new Set(),
     cache: null,
@@ -130,10 +129,6 @@
     );
     for (const [year, item] of archivedYears) {
       state.transactions.set(Number(year), item.transactions ?? []);
-      state.returns.set(`total:return:${year}`, item.totalReturn ?? null);
-      for (const [account, roi] of Object.entries(item.accountReturns ?? {})) {
-        state.returns.set(`account:${account}:return:${year}`, roi ?? null);
-      }
     }
     render();
     requestDetails();
@@ -145,18 +140,6 @@
     for (const [year, transactions] of state.transactions) {
       years[year] ??= {};
       years[year].transactions = transactions;
-    }
-    for (const [key, roi] of state.returns) {
-      const match = key.match(/^(account:([^:]+)|total):return:(\d{4})$/);
-      if (!match) continue;
-      const year = match[3];
-      years[year] ??= {};
-      if (match[2]) {
-        years[year].accountReturns ??= {};
-        years[year].accountReturns[match[2]] = roi;
-      } else {
-        years[year].totalReturn = roi;
-      }
     }
     const accountCharts = Object.fromEntries(state.accountCharts);
     const nextCache = {
@@ -207,20 +190,9 @@
         `${API_ORIGIN}/account/chart/account/${account.account}/language/fr?rangeType=${state.accountCharts.has(account.account) ? monthRange(year) : "sinceInception"}`,
         `account:${account.account}:${state.accountCharts.has(account.account) ? "current" : "all"}`,
       );
-      for (const year of years) {
-        if (year < currentYear() && state.cache?.years?.[year]) continue;
-        request(
-          `${API_ORIGIN}/account/chart/account/${account.account}/language/fr?rangeType=${monthRange(year)}`,
-          `account:${account.account}:return:${year}`,
-        );
-      }
     }
     for (const year of years) {
       if (year < currentYear() && state.cache?.years?.[year]) continue;
-      request(
-        `${API_ORIGIN}/portfoliosummary/performance/v3/fr?rangeType=${monthRange(year)}`,
-        `total:return:${year}`,
-      );
       request(
         `${API_ORIGIN}/transactions/investorId/${state.investorId}/language/fr?rangeType=${dayRange(year)}&pageOrigin=transactions`,
         `transactions:${year}`,
@@ -251,8 +223,6 @@
     } else if (requestId === "total:current") {
       state.total = analytics.mergeChartData(state.total, data);
       setProgress("performance", "done", "Année courante rafraîchie");
-    } else if (requestId?.startsWith("account:") && requestId.includes(":return:")) {
-      state.returns.set(requestId, data.returnOnInvestment);
     } else if (requestId?.startsWith("account:") && requestId.endsWith(":current")) {
       const account = requestId.split(":")[1];
       state.accountCharts.set(
@@ -261,11 +231,6 @@
       );
     } else if (requestId?.startsWith("account:") && requestId.endsWith(":all")) {
       state.accountCharts.set(requestId.split(":")[1], data);
-    } else if (requestId?.startsWith("total:return:")) {
-      state.returns.set(
-        requestId,
-        data.performance?.returnOnInvestment ?? data.returnOnInvestment ?? null,
-      );
     } else if (requestId?.startsWith("transactions:")) {
       state.transactions.set(Number(requestId.split(":")[1]), data.transactionList ?? []);
     } else if (/\/portfoliosummary\/account\/v2\//.test(url)) {
@@ -281,14 +246,12 @@
   };
 
   const svgChart = (marketValue, netInvestedCapital, color) => {
-    const market = new Map(analytics.normalizeSeries(marketValue));
-    const capital = new Map(analytics.normalizeSeries(netInvestedCapital));
+    const returns = new Map(analytics.returnMetricsSeries(marketValue, netInvestedCapital));
     const points = analytics.gainSeries(marketValue, netInvestedCapital).map(([date, gain]) => ({
       date,
       gain,
-      capital: capital.get(date) ?? 0,
-      market: market.get(date) ?? 0,
-      rate: capital.get(date) ? (gain / capital.get(date)) * 100 : 0,
+      rate: returns.get(date)?.total ?? 0,
+      yearRate: returns.get(date)?.year ?? 0,
     }));
     if (points.length < 2) return '<p class="me-empty">Données mensuelles indisponibles.</p>';
     const width = 720;
@@ -316,11 +279,9 @@
         points.slice(0, index).findLast((item) => new Date(item.date).getTime() < yearStart) ??
         points[0];
       const yearGain = point.gain - baseline.gain;
-      const yearRate = baseline.capital ? (yearGain / baseline.capital) * 100 : 0;
       return {
         ...point,
         yearGain,
-        yearRate,
         x: Number(x(index).toFixed(1)),
         y: Number(y(point.gain).toFixed(1)),
       };
@@ -410,15 +371,14 @@
     });
   };
 
-  const yearlyCards = (key, gains, returns, fees) =>
+  const yearlyCards = (gains, returns, fees) =>
     Object.entries(gains)
       .filter(([year]) => Number(year) >= 2024)
       .map(([year, gain]) => {
-        const apiRoi = state.returns.get(`${key}:return:${year}`);
-        const roi = apiRoi ?? returns[year];
+        const roi = returns[year];
         const fee = fees[year];
         const roiLabel =
-          apiRoi === undefined && returns[year] === undefined
+          returns[year] === undefined
             ? "Rendement en chargement"
             : `Rendement estimé ${percent.format(Number(roi))} %`;
         const feeLabel = state.transactions.has(Number(year))
@@ -436,13 +396,13 @@
 
   const yearlyKpis = (data, fees, contributions, color) => {
     const market = analytics.normalizeSeries(data.marketValue);
-    const capital = analytics.normalizeSeries(data.netInvestedCapital);
     const gains = analytics.gainSeries(data.marketValue, data.netInvestedCapital);
     const currentMarket = market.at(-1)?.[1] ?? 0;
     const currentGain = gains.at(-1)?.[1] ?? 0;
-    const capitalBaseline = currentYearBaseline(capital);
     const gainThisYear = currentGain - currentYearBaseline(gains);
-    const gainThisYearRate = capitalBaseline ? (gainThisYear / capitalBaseline) * 100 : 0;
+    const gainThisYearRate =
+      analytics.returnMetricsSeries(data.marketValue, data.netInvestedCapital).at(-1)?.[1].year ??
+      0;
     const currentFees = fees[currentYear()]?.total ?? 0;
     const currentContributions = contributions[currentYear()]?.total ?? 0;
     return `<div class="me-kpis" style="--me-kpi-color:${color}">
@@ -529,15 +489,12 @@
       analytics.averageMarketValueByYear(data.marketValue),
     );
     const contributions = analytics.aggregateContributions(transactions);
-    const returns = analytics.yearlyReturnRates(
-      analytics.yearlyGains(gains),
-      analytics.averageMarketValueByYear(data.marketValue),
-    );
+    const returns = analytics.yearlyReturnRates(data.marketValue, data.netInvestedCapital);
     return `<section class="me-section">
       ${yearlyKpis(data, fees, contributions, color)}
       <div class="me-section-title" style="--me-section-color:${color}"><h3>${title}</h3><strong>${money.format(current)}</strong></div>
       ${svgChart(data.marketValue, data.netInvestedCapital, color)}
-      <div class="me-years">${yearlyCards(key, analytics.yearlyGains(gains), returns, fees)}</div>
+      <div class="me-years">${yearlyCards(analytics.yearlyGains(gains), returns, fees)}</div>
       ${contributionTable(key, transactions, color)}
     </section>`;
   };
