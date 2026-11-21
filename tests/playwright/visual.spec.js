@@ -168,7 +168,7 @@ test("hydrates cached history and requests only fresh years", async ({ page }) =
     ),
   ).resolves.toBe(false);
   await expect(page.getByRole("button", { name: "Ouvrir Manuvie Évolution" })).toContainText(
-    "v0.2.21",
+    `v${extensionVersion}`,
   );
   await page.getByRole("button", { name: "Ouvrir Manuvie Évolution" }).click();
   await expect(page.getByRole("heading", { name: "Gains de vos placements" })).toBeVisible();
