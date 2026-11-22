@@ -61,6 +61,7 @@
 
   let root;
   let panel;
+  let chartEvents;
 
   const storageGet = async () => {
     if (!canStore()) return null;
@@ -128,7 +129,7 @@
       ([year]) => Number(year) < currentYear(),
     );
     for (const [year, item] of archivedYears) {
-      state.transactions.set(Number(year), item.transactions ?? []);
+      if (Array.isArray(item.transactions)) state.transactions.set(Number(year), item.transactions);
     }
     render();
     requestDetails();
@@ -192,7 +193,7 @@
       );
     }
     for (const year of years) {
-      if (year < currentYear() && state.cache?.years?.[year]) continue;
+      if (year < currentYear() && state.transactions.has(year)) continue;
       request(
         `${API_ORIGIN}/transactions/investorId/${state.investorId}/language/fr?rangeType=${dayRange(year)}&pageOrigin=transactions`,
         `transactions:${year}`,
@@ -313,6 +314,8 @@
   };
 
   const setupChartHover = () => {
+    chartEvents?.abort();
+    chartEvents = new AbortController();
     panel.querySelectorAll(".me-chart").forEach((chart) => {
       const points = JSON.parse(decodeURIComponent(chart.dataset.points ?? "[]"));
       if (!points.length) return;
@@ -327,6 +330,8 @@
       const tooltipGain = chart.querySelector(".me-tooltip-gain");
       const tooltipRate = chart.querySelector(".me-tooltip-rate");
       const chartPoint = chart.createSVGPoint();
+      let pinned = false;
+      const hide = () => hover.setAttribute("hidden", "");
       const clientToViewX = (clientX, clientY) => {
         chartPoint.x = clientX;
         chartPoint.y = clientY;
@@ -357,16 +362,32 @@
         tooltipRate.textContent = `Rendement ${percent.format(selected.rate)} %`;
       };
       chart.addEventListener("pointermove", (event) => showPoint(event.clientX, event.clientY));
+      chart.addEventListener("pointerdown", (event) => {
+        if (event.pointerType === "touch") {
+          pinned = true;
+          showPoint(event.clientX, event.clientY);
+        }
+      });
       chart.addEventListener("pointerleave", () => {
-        hover.setAttribute("hidden", "");
+        if (!pinned) hide();
       });
       chart.addEventListener("focus", () => {
         const box = chart.getBoundingClientRect();
         showPoint(box.right, box.top + box.height / 2);
       });
       chart.addEventListener("blur", () => {
-        hover.setAttribute("hidden", "");
+        if (!pinned) hide();
       });
+      document.addEventListener(
+        "pointerdown",
+        (event) => {
+          if (pinned && !chart.contains(event.target)) {
+            pinned = false;
+            hide();
+          }
+        },
+        { signal: chartEvents.signal },
+      );
       chart.tabIndex = 0;
     });
   };
@@ -518,6 +539,33 @@
     return tabs;
   };
 
+  const exportRows = () => {
+    const firstTimestamp = analytics.normalizeSeries(state.total?.marketValue)[0]?.[0];
+    if (!firstTimestamp) return null;
+    const firstYear = new Date(firstTimestamp).getUTCFullYear();
+    const years = Array.from(
+      { length: currentYear() - firstYear + 1 },
+      (_, index) => firstYear + index,
+    );
+    if (years.some((year) => !state.transactions.has(year))) return null;
+    return years.flatMap((year) =>
+      state.transactions.get(year).map((item) => {
+        const [day, month, dateYear] = String(item.tradeDate ?? "").split("/");
+        return {
+          date: dateYear
+            ? `${dateYear}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`
+            : item.tradeDate,
+          institution: "Manuvie",
+          compte: item.accountNumber,
+          type: item.transactionType,
+          description: item.securityDescription,
+          montant: item.totalValue,
+          devise: item.currency,
+        };
+      }),
+    );
+  };
+
   const dashboard = () => {
     const tabs = availableTabs();
     const selected = tabs.find((tab) => tab.key === state.activeTab) ?? tabs[0];
@@ -564,7 +612,10 @@
   const render = () => {
     if (!panel) return;
     panel.hidden = !state.open;
-    if (!state.open) return;
+    if (!state.open) {
+      chartEvents?.abort();
+      return;
+    }
     if (!state.total || !state.accounts) {
       const steps = progressSteps.map(([id, label]) => {
         const item = state.progress.get(id) ?? {
@@ -582,9 +633,14 @@
       panel.querySelector(".me-close").addEventListener("click", toggle);
       return;
     }
-    panel.innerHTML = `<header><div><small>MANUVIE ÉVOLUTION</small><h2>Gains de vos placements</h2></div><button class="me-close" aria-label="Fermer">×</button></header>
+    panel.innerHTML = `<header><div><small>MANUVIE ÉVOLUTION</small><h2>Gains de vos placements</h2></div><div class="me-header-actions"><button class="me-export" type="button" aria-label="Télécharger les opérations (CSV)" title="Télécharger les opérations (CSV)" ${exportRows() ? "" : "disabled"}><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v3h16v-3"/></svg></button><button class="me-close" aria-label="Fermer">×</button></div></header>
       <main>${dashboard()}</main>`;
     panel.querySelector(".me-close").addEventListener("click", toggle);
+    panel
+      .querySelector(".me-export")
+      .addEventListener("click", () =>
+        globalThis.PortfolioCsv.download(globalThis.PortfolioCsv.filename("Manuvie"), exportRows()),
+      );
     panel.querySelectorAll(".me-tab").forEach((tab) => {
       tab.addEventListener("click", () => {
         state.activeTab = tab.dataset.tab;
