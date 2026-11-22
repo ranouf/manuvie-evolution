@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 import { chromium, expect, test } from "@playwright/test";
@@ -42,7 +42,17 @@ test("loads the unpacked extension in Chromium and crosses isolated worlds", asy
       : url.includes("/account/v2/")
         ? { queryId: "accounts" }
         : url.includes("/transactions/")
-          ? { transactionList: [] }
+          ? {
+              transactionList: [
+                {
+                  tradeDate: "16/04/2026",
+                  accountNumber: "DEMOREER",
+                  transactionType: "Cotisation",
+                  securityDescription: "REER",
+                  totalValue: 100,
+                },
+              ],
+            }
           : { queryId: "performance" };
     await route.fulfill({
       contentType: "application/json",
@@ -65,8 +75,20 @@ test("loads the unpacked extension in Chromium and crosses isolated worlds", asy
   await expect(hasPageHorizontalOverflow()).resolves.toBe(false);
   await page.getByRole("button", { name: "Ouvrir Manuvie Évolution" }).click();
   await expect(page.getByRole("heading", { name: "Gains de vos placements" })).toBeVisible();
+  const exportButton = page.getByRole("button", { name: "Télécharger les opérations (CSV)" });
+  await expect(exportButton).toBeEnabled();
+  const downloadPromise = page.waitForEvent("download");
+  await exportButton.click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toMatch(/^\d{8}_Manuvie_Transactions\.csv$/);
+  expect(readFileSync(await download.path(), "utf8")).toContain(
+    '"Manuvie","DEMOREER","Cotisation"',
+  );
   await expect(hasPageHorizontalOverflow()).resolves.toBe(false);
-  await page.screenshot({ path: "test-results/manuvie-evolution-version.png" });
+  mkdirSync(".vs", { recursive: true });
+  await page.screenshot({ path: ".vs/manuvie-export.png" });
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.screenshot({ path: ".vs/manuvie-export-mobile.png" });
   await context.close();
 });
 
@@ -474,6 +496,21 @@ test("renders the Manuvie Evolution dashboard", async ({ page }) => {
       .locator(".me-chart-hover")
       .evaluate((element) => getComputedStyle(element).pointerEvents),
   ).resolves.toBe("none");
+  await page.setViewportSize({ width: 390, height: 780 });
+  await firstChart.scrollIntoViewIfNeeded();
+  const touchPoint = await hoverTarget("last");
+  await firstChart.dispatchEvent("pointerdown", {
+    pointerType: "touch",
+    clientX: touchPoint.clientX,
+    clientY: touchPoint.clientY,
+  });
+  await firstChart.dispatchEvent("pointerleave", { pointerType: "touch" });
+  await page.waitForTimeout(200);
+  await expect(firstChart.locator(".me-chart-hover")).toBeVisible();
+  await page.screenshot({ path: ".vs/manuvie-chart-touch.png" });
+  await page.locator(".me-section-title").click();
+  await expect(firstChart.locator(".me-chart-hover")).toBeHidden();
+  await page.setViewportSize({ width: 1440, height: 1000 });
   await expect(
     page.locator(".me-panel").evaluate((element) => element.scrollHeight <= element.clientHeight),
   ).resolves.toBe(true);

@@ -62,6 +62,12 @@ Publication from GitHub:
 
 The displayed gain is calculated as `market value - net invested capital`. Deposits and withdrawals are therefore not counted as gains or losses.
 
+## Export des opérations
+
+Le bouton **Télécharger les opérations (CSV)** produit `AAAAMMJJ_Manuvie_Transactions.csv` avec toutes les opérations annuelles reçues depuis le début de l'historique du portefeuille. Le bouton attend que chaque année soit chargée.
+
+Le fichier est encodé en UTF-8, avec virgules comme séparateurs et dates `AAAA-MM-JJ`. Les colonnes communes sont `date,institution,compte,type,description,montant,devise,titre,quantite,prix_unitaire,frais,reference`. Les champs absents restent vides. Aucun gain ni rendement calculé n'est exporté.
+
 ## Local cache
 
 The extension keeps already loaded data in Chrome local storage, per investor. Closed years are reused on the next load, and the extension requests only the current year again to refresh charts and fees.

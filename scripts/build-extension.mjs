@@ -17,6 +17,7 @@ const files = [
   "icons/icon-48.png",
   "icons/icon-128.png",
   "src/analytics.js",
+  "src/csv.js",
   "src/content.js",
   "src/network-bridge.js",
   "src/styles.css",
